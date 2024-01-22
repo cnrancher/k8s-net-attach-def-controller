@@ -44,6 +44,7 @@ const (
 	statusesKey              = "k8s.v1.cni.cncf.io/networks-status"
 	controllerName           = "net-attach-def.panda.io"
 	svcSuffixMacvlan         = "-macvlan"
+	svcPrefixIngress         = "ingress-"
 	enableEndpointSliceWatch = "PANDA_ENABLE_ENDPOINTSLICE_WATCH"
 )
 
@@ -194,8 +195,13 @@ func (c *NetworkController) processNextWorkItem() bool {
 			return nil
 		}
 
-		if !strings.HasSuffix(key, svcSuffixMacvlan) {
-			klog.V(4).Infof("ignore svc %s as has no %s suffic", key, svcSuffixMacvlan)
+		_, name, err := cache.SplitMetaNamespaceKey(key)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
+			return nil
+		}
+		if !c.needToSyncService(name) {
+			klog.V(4).Infof("ignore syncing service %q", key)
 			return nil
 		}
 
@@ -565,6 +571,20 @@ func (c *NetworkController) handleEndpointSliceEvent(obj interface{}) {
 	}
 	key := fmt.Sprintf("%s/%s", endpointSlice.Namespace, svcName)
 	c.workqueue.AddRateLimited(key)
+}
+
+func (c *NetworkController) needToSyncService(serviceName string) bool {
+	if c.needToUpdateEndpointSlice {
+		// If k8s version > 1.20 and supports discovery.k8s.io/v1,
+		// Only sync the macvlan service.
+		// This controller will update the Endpoint Slice by using discovery.k8s.io/v1 API.
+		return strings.HasSuffix(serviceName, svcSuffixMacvlan)
+	}
+
+	// If k8s version <= 1.20 and does not support discover.k8s.io/v1,
+	// Sync the macvlan service and rancher created ingress services.
+	// This controller will update the ingress endpoints directly.
+	return strings.HasSuffix(serviceName, svcSuffixMacvlan) || strings.HasPrefix(serviceName, svcPrefixIngress)
 }
 
 // Run will set up the event handlers for types we are interested in, as well
