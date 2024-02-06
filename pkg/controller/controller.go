@@ -574,16 +574,6 @@ func (c *NetworkController) handleEndpointSliceEvent(obj interface{}) {
 }
 
 func (c *NetworkController) needToSyncService(serviceName string) bool {
-	if c.needToUpdateEndpointSlice {
-		// If k8s version > 1.20 and supports discovery.k8s.io/v1,
-		// Only sync the macvlan service.
-		// This controller will update the Endpoint Slice by using discovery.k8s.io/v1 API.
-		return strings.HasSuffix(serviceName, svcSuffixMacvlan)
-	}
-
-	// If k8s version <= 1.20 and does not support discover.k8s.io/v1,
-	// Sync the macvlan service and rancher created ingress services.
-	// This controller will update the ingress endpoints directly.
 	return strings.HasSuffix(serviceName, svcSuffixMacvlan) || strings.HasPrefix(serviceName, svcPrefixIngress)
 }
 
