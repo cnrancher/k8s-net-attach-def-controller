@@ -252,9 +252,9 @@ func (c *NetworkController) sync(key string) error {
 		return nil
 	}
 	if len(networks) > 1 {
-		msg := fmt.Sprintf("multiple network selections in the service spec are not supported")
-		klog.Warningf(msg)
-		c.recorder.Event(svc, corev1.EventTypeWarning, msg, "Endpoints update aborted")
+		klog.Warningf("multiple network selections in the service spec are not supported")
+		c.recorder.Event(svc, corev1.EventTypeWarning,
+			"multiple network selections in the service spec are not supported", "Endpoints update aborted")
 		return nil
 	}
 
@@ -493,7 +493,7 @@ func (c *NetworkController) handlePodEvent(obj interface{}) {
 	// if not behind any service discard
 	services, err := helper.GetPodServices(c.serviceLister, pod)
 	if err != nil {
-		klog.V(4).Info("skipping pod event: %s", err)
+		klog.V(4).Infof("skipping pod event: %s", err.Error())
 		return
 	}
 	for _, svc := range services {
