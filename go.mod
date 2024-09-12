@@ -2,8 +2,6 @@ module github.com/k8snetworkplumbingwg/k8s-net-attach-def-controller
 
 go 1.22.0
 
-toolchain go1.23.0
-
 replace (
 	k8s.io/api => k8s.io/api v0.30.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.30.1
