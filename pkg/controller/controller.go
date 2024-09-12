@@ -40,8 +40,6 @@ import (
 )
 
 const (
-	selectionsKey            = "k8s.v1.cni.cncf.io/networks"
-	statusesKey              = "k8s.v1.cni.cncf.io/networks-status"
 	controllerName           = "net-attach-def.panda.io"
 	svcSuffixMacvlan         = "-macvlan"
 	svcPrefixIngress         = "ingress-"
@@ -286,9 +284,14 @@ func (c *NetworkController) sync(key string) error {
 		ports := make([]corev1.EndpointPort, 0)
 
 		networksStatus := make([]nettypes.NetworkStatus, 0)
-		err := json.Unmarshal([]byte(pod.Annotations[statusesKey]), &networksStatus)
+		s := pod.Annotations[nettypes.NetworkStatusAnnot]
+		if s == "" {
+			s = pod.Annotations[nettypes.OldNetworkStatusAnnot]
+		}
+		err := json.Unmarshal([]byte(s), &networksStatus)
 		if err != nil {
-			klog.Warningf("skip to update for pod %s as networks status are not expected: %v", pod.Name, err)
+			klog.Errorf("unable to update for pod [%s/%s] as networks status are not expected: %q: %v",
+				pod.Namespace, pod.Name, s, err)
 			continue
 		}
 		// find networks used by pod and match network annotation of the service
@@ -484,7 +487,7 @@ func (c *NetworkController) handlePodEvent(obj interface{}) {
 	}
 
 	// if no network annotation discard
-	_, ok = pod.GetAnnotations()[selectionsKey]
+	_, ok = pod.GetAnnotations()[nettypes.NetworkAttachmentAnnot]
 	if !ok {
 		klog.V(4).Info("skipping pod event: network annotations missing")
 		return
@@ -525,7 +528,7 @@ func (c *NetworkController) handleNetAttachDefDeleteEvent(obj interface{}) {
 		pods, _ := c.podsLister.Pods("").List(labels.Everything())
 		/* check whether net-attach-def requested to be removed is still in use by any of the pods */
 		for _, pod := range pods {
-			netAnnotations, ok := pod.ObjectMeta.Annotations[selectionsKey]
+			netAnnotations, ok := pod.ObjectMeta.Annotations[nettypes.NetworkAttachmentAnnot]
 			if !ok {
 				continue
 			}

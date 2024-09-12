@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	nettypes "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
@@ -40,7 +41,7 @@ func networkStatusChanged(_, _ interface{}) bool {
 
 func getNetworkAnnotations(obj interface{}) string {
 	metaObject := obj.(metav1.Object)
-	annotations, ok := metaObject.GetAnnotations()[selectionsKey]
+	annotations, ok := metaObject.GetAnnotations()[nettypes.NetworkAttachmentAnnot]
 	if !ok {
 		return ""
 	}
