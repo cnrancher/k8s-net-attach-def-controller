@@ -1,0 +1,48 @@
+run:
+  timeout: 5m
+  go: "1.22"
+  skip-files:
+  tests: false
+  allow-parallel-runners: true
+
+output:
+  format: github-actions
+
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - revive
+    - goimports
+    - misspell
+    - ineffassign
+    - gofmt
+
+linters-settings:
+  govet:
+    check-shadowing: false
+  gofmt:
+    simplify: false
+  run:
+    skip-dirs:
+      vendor
+      tests
+      pkg/generated
+    tests: false
+    timeout: 30m
+  gosec:
+    excludes:
+      - G115 # https://github.com/moby/moby/issues/48358#issuecomment-2323339603
+
+issues:
+  exclude-files:
+  - "zz_generated_*"
+  exclude-rules:
+  - linters: govet
+    text: "^(nilness|structtag)"
+  - linters: revive
+    text: "should have comment"
+  - linters: revive
+    text: "should be of the form"
+  - linters: revive
+    text: "imported but not used as apierrors"

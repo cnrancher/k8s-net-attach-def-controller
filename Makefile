@@ -1,29 +1,34 @@
-TARGETS := $(shell ls scripts)
+TAG?=$(shell git describe --abbrev=0 --tags 2>/dev/null || echo "v0.0.0" )
+COMMIT?=$(shell git rev-parse HEAD)
 
-.dapper:
-	@echo Downloading dapper
-	@curl -sL https://releases.rancher.com/dapper/latest/dapper-`uname -s`-`uname -m` > .dapper.tmp
-	@@chmod +x .dapper.tmp
-	@./.dapper.tmp -v
-	@mv .dapper.tmp .dapper
+default: build
 
-$(TARGETS): .dapper
-	./.dapper $@
+.PHONY: build
+build:
+	COMMIT=$(COMMIT) TAG=$(TAG) goreleaser build --snapshot --clean
 
-.DEFAULT_GOAL := ci
+.PHONY: test
+test:
+	CGO_ENABLED=0 go test -cover --count=1 ./...
 
-.PHONY: $(TARGETS) dev clean
-
-dev:
-	mkdir -p bin
-	CGO_ENABLED=0 go build -o bin/k8s-net-attach-def-controller
-
+.PHONY: clean
 clean:
-	rm -rf bin/ dist/
+	./scripts/clean
 
-image: ci
-	docker push cnrancher/k8s-net-attach-def-controller:latest
+.PHONY: image
+image:
+	TAG=$(TAG) ./scripts/image
 
-shell-bind: .dapper
-	./.dapper -m bind -s
+.PHONY: image-push
+image-push:
+	TAG=$(TAG) BUILDX_OPTIONS="--push" ./scripts/image.sh
 
+.PHONY: help
+help:
+	@echo "Usage:"
+	@echo "	make build		build binary files"
+	@echo "	make test		run unit tests"
+	@echo "	make image		build container images"
+	@echo "	make image-push		build container images and push"
+	@echo "	make clean		clean up built files"
+	@echo "	make help		show this message"
