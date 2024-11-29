@@ -286,7 +286,7 @@ func (c *NetworkController) sync(key string) error {
 		networksStatus := make([]nettypes.NetworkStatus, 0)
 		s := pod.Annotations[nettypes.NetworkStatusAnnot]
 		if s == "" {
-			s = pod.Annotations[nettypes.OldNetworkStatusAnnot]
+			s = pod.Annotations["k8s.v1.cni.cncf.io/networks-status"]
 		}
 		err := json.Unmarshal([]byte(s), &networksStatus)
 		if err != nil {
