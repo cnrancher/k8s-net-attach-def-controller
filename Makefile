@@ -21,7 +21,7 @@ image:
 
 .PHONY: image-push
 image-push:
-	TAG=$(TAG) BUILDX_OPTIONS="--push" ./scripts/image.sh
+	TAG=$(TAG) BUILDX_OPTIONS="--push" ./scripts/image
 
 .PHONY: help
 help:
