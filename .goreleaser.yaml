@@ -23,7 +23,8 @@ builds:
   ldflags:
     - -extldflags -static
     - -s -w
-    - -X main.Version={{.Env.TAG}}
+    - -X github.com/k8snetworkplumbingwg/k8s-net-attach-def-controller/pkg/utils.COMMIT={{.Env.COMMIT}}
+    - -X github.com/k8snetworkplumbingwg/k8s-net-attach-def-controller/pkg/utils.VERSION={{.Env.TAG}}
   main: ./main.go
   id: k8s-net-attach-def-controller
   binary: k8s-net-attach-def-controller

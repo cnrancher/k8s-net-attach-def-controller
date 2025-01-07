@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"time"
 
 	discoveryclient "k8s.io/client-go/discovery"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/k8snetworkplumbingwg/k8s-net-attach-def-controller/pkg/controller"
 	"github.com/k8snetworkplumbingwg/k8s-net-attach-def-controller/pkg/signals"
+	"github.com/k8snetworkplumbingwg/k8s-net-attach-def-controller/pkg/utils"
 )
 
 var (
@@ -27,6 +29,8 @@ var (
 
 	// default workers of this controller
 	defaultWorkers = 3
+
+	version bool
 )
 
 func main() {
@@ -35,9 +39,15 @@ func main() {
 
 	flag.StringVar(&master, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Required if out-of-cluster.")
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Required if out-of-cluster.")
+	flag.BoolVar(&version, "version", false, "Show version")
 
 	// parse custom and klog/v2 flags
 	flag.Parse()
+
+	if version {
+		fmt.Printf("Version %v - %v\n", utils.VERSION, utils.COMMIT)
+		return
+	}
 
 	// make sure we flush before exiting
 	defer klog.Flush()
